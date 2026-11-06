@@ -3,9 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>انتقال — پروتوتایپ P1: گوش‌دادن</title>
+<title>انتقال P1</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap">
 <style>
   :root{
+    color-scheme:dark;
     --bg:#0a0f1a; --panel:#111a2b; --line:#22314d; --text:#d7e2f5; --dim:#8497b8;
     --accent:#5fd4ff; --accent-ink:#04202b; --clock:#ff3b3b; --warn:#ffb36b;
     --lever:#7fe0a4; --tender:#ff9ec0;
@@ -19,11 +21,12 @@
     font:16px/1.9 "Vazirmatn","Segoe UI",Tahoma,"Noto Sans Arabic",system-ui,sans-serif;
     transition:background .8s,color .8s; min-height:100vh;
   }
-  .wrap{max-width:1040px;margin:0 auto;padding:16px}
+  .wrap{max-width:1040px;margin:0 auto;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  main>*{min-width:0}
   header.hud{
     display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;
     background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;
-    position:sticky;top:8px;z-index:5;transition:background .8s,border-color .8s;
+    position:sticky;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:5;transition:background .8s,border-color .8s;
   }
   .stat small{display:block;color:var(--dim);font-size:12px;line-height:1.4}
   .stat b{font-size:17px;font-weight:600}
@@ -41,7 +44,7 @@
   .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;transition:background .8s,border-color .8s}
   #log{min-height:260px;max-height:62vh;overflow:auto}
   #log p{margin:0 0 .8em}
-  #log .sys{color:var(--accent);font-family:ui-monospace,Menlo,Consolas,monospace;direction:ltr;text-align:left;font-size:14px;line-height:1.6}
+  #log .sys{color:var(--accent);font-family:ui-monospace,Menlo,Consolas,monospace;direction:ltr;text-align:left;font-size:14px;line-height:1.6;overflow-wrap:anywhere;max-width:100%}
   #log .quote{color:#fff;border-inline-start:3px solid var(--accent);padding-inline-start:10px}
   #log .echo{color:var(--tender);font-style:italic}
   #log .echo.storm{animation:shake .25s infinite}
@@ -503,7 +506,6 @@ function finale(kind){
   const l=$('#log'); l.scrollTop=l.scrollHeight;
 }
 
-window.__P1 = { S:()=>S, CFG, summary }; // برای تست خودکار
 title();
 })();
 </script>
