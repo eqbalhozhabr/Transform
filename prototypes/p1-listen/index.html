@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>انتقال — پروتوتایپ P1: گوش‌دادن</title>
+<style>
+  :root{
+    --bg:#0a0f1a; --panel:#111a2b; --line:#22314d; --text:#d7e2f5; --dim:#8497b8;
+    --accent:#5fd4ff; --accent-ink:#04202b; --clock:#ff3b3b; --warn:#ffb36b;
+    --lever:#7fe0a4; --tender:#ff9ec0;
+  }
+  body[data-tone="1"]{ --bg:#10131a; --panel:#1a1c26; --line:#3a3342; --accent:#d9b8ff; --accent-ink:#1e1030; }
+  body[data-tone="2"]{ --bg:#17110f; --panel:#241a16; --line:#4a352c; --accent:#ffb36b; --accent-ink:#2c1704; --text:#f1e3d6; --dim:#b39a88; }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font:16px/1.9 "Vazirmatn","Segoe UI",Tahoma,"Noto Sans Arabic",system-ui,sans-serif;
+    transition:background .8s,color .8s; min-height:100vh;
+  }
+  .wrap{max-width:1040px;margin:0 auto;padding:16px}
+  header.hud{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;
+    position:sticky;top:8px;z-index:5;transition:background .8s,border-color .8s;
+  }
+  .stat small{display:block;color:var(--dim);font-size:12px;line-height:1.4}
+  .stat b{font-size:17px;font-weight:600}
+  .clock{font:700 28px/1.2 ui-monospace,Menlo,Consolas,monospace;color:var(--clock);letter-spacing:2px;direction:ltr;text-align:right}
+  .clock.recalc{animation:jit .12s infinite}
+  .clock.hidden{opacity:.25}
+  @keyframes jit{0%{transform:translate(1px,0)}50%{transform:translate(-1px,1px)}100%{transform:translate(0,-1px)}}
+  .pips{display:flex;gap:4px;margin-top:4px}
+  .pip{width:16px;height:8px;border-radius:3px;background:var(--line)}
+  .pip.on{background:var(--warn)}
+  .pip.w.on{background:var(--tender)}
+  main{display:grid;grid-template-columns:1.5fr 1fr;gap:14px;margin-top:14px}
+  @media(max-width:820px){main{grid-template-columns:1fr}}
+  @media(max-width:600px){header.hud{position:static;grid-template-columns:1fr 1fr;gap:6px 10px}.clock{font-size:22px}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;transition:background .8s,border-color .8s}
+  #log{min-height:260px;max-height:62vh;overflow:auto}
+  #log p{margin:0 0 .8em}
+  #log .sys{color:var(--accent);font-family:ui-monospace,Menlo,Consolas,monospace;direction:ltr;text-align:left;font-size:14px;line-height:1.6}
+  #log .quote{color:#fff;border-inline-start:3px solid var(--accent);padding-inline-start:10px}
+  #log .echo{color:var(--tender);font-style:italic}
+  #log .echo.storm{animation:shake .25s infinite}
+  @keyframes shake{0%{transform:translateX(2px)}50%{transform:translateX(-2px)}100%{transform:translateX(1px)}}
+  #log .dim{color:var(--dim)}
+  #log h3{margin:.2em 0 .4em;color:var(--accent)}
+  .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  button{
+    font:inherit;color:var(--text);background:transparent;border:1px solid var(--line);
+    border-radius:10px;padding:8px 14px;cursor:pointer;transition:.15s;
+  }
+  button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+  button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+  button.primary:hover:not(:disabled){filter:brightness(1.1);color:var(--accent-ink)}
+  button:disabled{opacity:.35;cursor:not-allowed}
+  button small{display:block;color:var(--dim);font-size:12px;line-height:1.4}
+  .group-title{width:100%;color:var(--dim);font-size:13px;margin-top:6px}
+  .fact{border-inline-start:3px solid var(--line);padding:4px 10px;margin:6px 0;font-size:15px;line-height:1.7}
+  .fact.E{border-color:var(--lever)}
+  .fact.T{border-color:var(--tender)}
+  .tag{display:inline-block;font-size:12px;border-radius:6px;padding:0 7px;margin-inline-end:6px}
+  .tag.E{background:rgba(127,224,164,.15);color:var(--lever)}
+  .tag.T{background:rgba(255,158,192,.15);color:var(--tender)}
+  label.lever{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:8px 0;cursor:pointer;width:100%}
+  label.lever input{margin-top:8px;accent-color:var(--accent)}
+  .legend{color:var(--dim);font-size:13px;margin-top:10px;line-height:1.7}
+  textarea{width:100%;height:150px;background:#00000040;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;direction:ltr}
+  ul.sum{padding-inline-start:20px;margin:.3em 0}
+  .center{text-align:center}
+  h1{margin:.2em 0 .1em;font-size:26px}
+  .sub{color:var(--dim);margin:0 0 1em}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body data-tone="0">
+<div class="wrap">
+  <header class="hud" id="hud" aria-label="نمایشگر">
+    <div class="stat"><small>ساعت (نمایشگرِ چیپ)</small><div class="clock" id="clock">00:45:00</div></div>
+    <div class="stat"><small>میزبان فعلی</small><b>آدام <span class="dim" style="color:var(--dim);font-weight:400">— در حال پوسیدن</span></b></div>
+    <div class="stat"><small>هدف</small><b id="target">—</b></div>
+    <div class="stat"><small>سوءظنِ او («نگاهِ بی‌انسان»)</small><div class="pips" id="susp"></div></div>
+    <div class="stat"><small>سنگینیِ پژواکِ آینده</small><div class="pips" id="weight"></div></div>
+  </header>
+
+  <main>
+    <section class="card" aria-live="polite">
+      <div id="log"></div>
+      <div class="actions" id="actions"></div>
+    </section>
+    <aside class="card">
+      <h3 style="margin:.1em 0 .3em;color:var(--accent)">آنچه می‌دانی</h3>
+      <div id="facts"><span class="dim" style="color:var(--dim)">هنوز هیچ.</span></div>
+      <div class="legend">
+        <span class="tag E">اهرم</span> دانشی که می‌شود به‌کار برد.<br>
+        <span class="tag T">لطیف</span> دانشی که هم اهرم است، هم زخم.
+      </div>
+    </aside>
+  </main>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ==========================================================================
+   تنظیمات قابل‌تغییر (Tuning). برای بالانس فقط همین بخش را عوض کنید.
+   ========================================================================== */
+const CFG = {
+  startClock: 45*60,        // ثانیه
+  shockAt: 3,               // شوکِ بازمحاسبه بعد از این تعداد کنش
+  shockAmount: 15*60,       // ثانیه
+  scanCost: 60,
+  scanBonus: 1,
+  suspLimit: 5,             // به این عدد برسد، او عقب می‌کشد
+  intimacy: { cost:20*60, needTrust:3, base:3, trustK:1.0, suspK:1.0, clean:6,   messy:4 },
+  ambush:   { cost: 4*60, base:2,      trustK:0.5, suspK:0.5, clean:4.5, messy:2 },
+  withdrawnPenalty: 2,
+  leverGain: { E:1, T:2 },
+  weightKnownT: 1, weightUsedT: 2, weightIntimacy: 2,
+  tiers: { whisperMax:2, voiceMax:6 },
+  hostClockClean: 124*3600+15*60+33,
+  hostClockMessy: 118*3600+20*60
+};
+
+/* ==========================================================================
+   محتوا: کانال‌های گوش‌دادن (همه از فصل ۲ داستان)
+   ========================================================================== */
+const CH = {
+  voice:{ name:'صدا', hint:'به نواختن گوش بده', cost:180, susp:0, tag:'E', beforeMetOnly:true,
+    text:'چشم‌هایت را می‌بندی و فقط می‌شنوی. این‌بار قطعه تند و خشمگین است — شوستاکوویچ؟ نه، چیزی شخصی‌تر. هر بار که آرشه سیم را رها می‌کند، یک ثانیه سکوت می‌ماند؛ مثل کسی که منتظر جواب است. جوابی نمی‌آید.',
+    fact:'او شب‌ها اینجا تنها می‌زند؛ کسی منتظرش نیست.',
+    lever:{ said:'«تنها می‌زنی… و کسی نیست که بگوید برو خونه.»', reply:'سارا نگاهش را از تو برنمی‌دارد: «تو از کجا می‌دونی؟»' } },
+  smell:{ name:'بو', hint:'نزدیک‌تر شو و نفس بکش', cost:60, susp:1, tag:'E',
+    text:'باد که می‌وزد بوی او به تو می‌رسد: یاس و چوب. بر بوی تعفنِ بدنِ آدام غلبه می‌کند. و چیزی دیگر هم هست — ترس نیست. او تنها در تاریکی نشسته و از هیچ سایه‌ای نمی‌ترسد.',
+    fact:'ترس در بدنش نیست؛ غریبه را از خودش نمی‌راند.',
+    lever:{ said:'نزدیک‌تر می‌ایستی، بی‌آنکه عقب بروی.', reply:'او هم عقب نمی‌رود.' } },
+  hands:{ name:'دست‌ها', hint:'به دست‌هایش نگاه کن', cost:120, susp:1, tag:'E',
+    text:'انگشت‌های کشیده، نوک‌هایی پینه‌بسته. هر حرکت از پیش حساب‌شده و بی‌خطاست. ساز برایش ادامهٔ بدن است، نه ابزار.',
+    fact:'بدنی با دقتِ بسیار بالا؛ ساز را مثل ادامهٔ خودش می‌شناسد.',
+    lever:{ said:'«نت سوم… لرزش داشت.»', reply:'«اون لرزش نبود. روحِ آهنگ بود.»' } },
+  eyes:{ name:'چشم‌ها', hint:'در چشم‌هایش نگاه کن', cost:120, susp:2, tag:'T',
+    text:'پیش از آنکه آرشه را پایین بیاورد، چشم‌هایش را می‌بینی: مژه‌هایش خیس است. گریه نمی‌کند؛ اشک خودش می‌آید، انگار که از جایی گذشته که تو هرگز نبوده‌ای.',
+    fact:'او برای کسی که دیگر نیست می‌نوازد؛ اشک می‌ریزد.',
+    lever:{ said:'«داره چکه می‌کنه…» (به گونه‌اش اشاره می‌کنی.)', reply:'سارا سریع گونه‌اش را پاک می‌کند و لبخندِ تلخی می‌زند.' } },
+  words:{ name:'واژه‌ها', hint:'با او حرف بزن', cost:180, susp:1, tag:'T', needsMet:true,
+    text:'می‌پرسی: «برای کسی می‌زنی؟» مکث می‌کند. «مادرم عاشق این قطعه بود. امروز سالگردشه. فکر می‌کردم اگه اینجا بزنمش، شاید… حسش کنه.» بعد دستش را دراز می‌کند: «من سارا هستم.»',
+    fact:'امروز سالگردِ مرگِ مادرش است. («من سارا هستم.»)',
+    lever:{ said:'«حافظه نوعی جاودانگیه. تا وقتی الگوی عصبیِ اون توی ذهن تو فعاله، اون وجود داره.»', reply:'سارا لبخند می‌زند؛ یک لبخندِ واقعی. «عجیبه… حرف‌هات به قیافه‌ت نمی‌خوره.»' } }
+};
+const ORDER = ['voice','smell','hands','eyes','words'];
+
+/* ==========================================================================
+   وضعیت
+   ========================================================================== */
+let S;
+function fresh(){
+  S = { clock:CFG.startClock, susp:0, trust:0, weight:0, scanned:false, actions:0,
+        met:false, shocked:false, withdrawn:false, used:[], facts:[], levers:[],
+        approach:null, quality:null, phase:'title', busy:false, ended:null, name:false };
+}
+const $ = s => document.querySelector(s);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep = ms => new Promise(r => setTimeout(r, reduce ? 0 : ms));
+const fa = n => String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+const fmt = s => { s=Math.max(0,Math.round(s)); const h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60; return [h,m,x].map(v=>String(v).padStart(2,'0')).join(':'); };
+const min = s => fa(Math.round(s/60));
+
+/* ---------- نمایش ---------- */
+function say(html, cls=''){ const p=document.createElement('p'); if(cls) p.className=cls; p.innerHTML=html; $('#log').appendChild(p); const l=$('#log'); l.scrollTop=l.scrollHeight; }
+function head(t){ const h=document.createElement('h3'); h.textContent=t; $('#log').appendChild(h); }
+function pips(el, n, max, cls=''){ el.innerHTML=''; for(let i=0;i<max;i++){ const d=document.createElement('span'); d.className='pip '+cls+(i<n?' on':''); el.appendChild(d);} }
+function weightPips(){ return Math.min(10, S.weight); }
+function targetLabel(){
+  if(S.name) return 'سارا';
+  if(S.met) return 'دختر ویولن‌سل';
+  return S.scanned ? 'میزبانِ بالقوه ۰۱ — رتبه: برتر' : 'میزبانِ بالقوه ۰۱';
+}
+function knownT(){ return S.facts.filter(k=>CH[k].tag==='T').length; }
+function hud(){
+  $('#clock').textContent = fmt(S.clock);
+  $('#target').textContent = targetLabel();
+  pips($('#susp'), S.susp, CFG.suspLimit);
+  pips($('#weight'), weightPips(), 10, 'w');
+  document.body.dataset.tone = String(Math.min(2, knownT()));
+  const f = $('#facts');
+  if(!S.facts.length){ f.innerHTML = '<span style="color:var(--dim)">هنوز هیچ.</span>'; }
+  else f.innerHTML = S.facts.map(k=>`<div class="fact ${CH[k].tag}"><span class="tag ${CH[k].tag}">${CH[k].tag==='E'?'اهرم':'لطیف'}</span>${CH[k].fact}</div>`).join('');
+}
+function actions(buttons, groups){
+  const a=$('#actions'); a.innerHTML='';
+  buttons.forEach(b=>{
+    if(b.group){ const g=document.createElement('div'); g.className='group-title'; g.textContent=b.group; a.appendChild(g); return; }
+    if(b.html){ const d=document.createElement('div'); d.style.width='100%'; d.innerHTML=b.html; a.appendChild(d); return; }
+    const el=document.createElement('button');
+    if(b.primary) el.className='primary';
+    el.innerHTML = b.label + (b.sub?`<small>${b.sub}</small>`:'');
+    el.disabled = !!b.disabled || S.busy;
+    el.onclick = b.on;
+    if(b.id) el.id=b.id;
+    a.appendChild(el);
+  });
+}
+
+/* ---------- ساعت ---------- */
+async function spend(sec){
+  S.clock -= sec;
+  hud();
+  if(S.clock <= 0){ S.clock = 0; hud(); await timeout(); return true; }
+  return false;
+}
+async function shock(){
+  S.shocked = true; S.busy = true;
+  document.querySelectorAll('#actions button').forEach(b=>b.disabled=true);
+  say('سرفه‌ای خشک. لثه‌هایت می‌سوزند و طعمِ آهن در دهانت می‌پیچد. مچت: اعداد می‌لرزند.');
+  const c=$('#clock'); c.classList.add('recalc'); c.textContent='RECALC…';
+  await sleep(1800);
+  const from=S.clock, to=Math.max(1, S.clock-CFG.shockAmount), steps=5;
+  for(let i=1;i<=steps;i++){ c.textContent=fmt(from-(from-to)*i/steps); await sleep(380); }
+  c.classList.remove('recalc'); S.clock=to; S.busy=false; hud();
+  say(`چیپ دوباره حساب کرده است: بدنِ آدام زودتر از پیش‌بینی می‌پوسد. <b>${min(CFG.shockAmount)} دقیقه</b> از دست رفت.`,'dim');
+  if(S.clock<=0){ await timeout(); }
+}
+
+/* ==========================================================================
+   صحنه‌ها
+   ========================================================================== */
+function title(){
+  fresh(); $('#log').innerHTML=''; hud();
+  S.phase='title';
+  $('#log').innerHTML = `
+    <h1>انتقال</h1>
+    <p class="sub">پروتوتایپ P1 — آزمایشِ «گوش‌دادن»</p>
+    <p>این یک آزمایش است، نه بازیِ کامل. فقط یک صحنه: <b>سارا</b> (فصل ۲–۳). یک ساعت، یک پژواک، و یک پرسش:</p>
+    <p class="quote">وقتی لطیف‌ترین چیزی که دربارهٔ کسی می‌دانی، بهترین اهرمِ توست — آیا به‌کارش می‌بری؟</p>
+    <p class="dim">حدود ۵ تا ۸ دقیقه. هیچ پاسخِ درستی نیست. در پایان می‌توانید نتیجه را کپی کنید و برای من بفرستید.</p>`;
+  actions([{label:'شروع', primary:true, on:intro}]);
+}
+
+function intro(){
+  S.phase='hub'; $('#log').innerHTML=''; hud();
+  head('پارک');
+  say('پارکِ سیاتل در تاریکی فرو رفته؛ اما موسیقی نورِ نامرئی‌ای دارد که فضا را روشن می‌کند. لای بوته‌های شمشاد، زیر سایهٔ بلوط پنهان شده‌ای. بدنِ آدام درد می‌کند: انگشت‌هایت بی‌حس‌اند و طعمِ خون در دهان داری. ونسی دنبالِ توست.');
+  say('و آنجا، زیر نورِ زردِ چراغ، دختری ویولن‌سل می‌زند.');
+  say('<b>هدف:</b> پیش از آنکه ساعت به صفر برسد، بدنی تازه پیدا کن. تو فقط یک راه می‌شناسی: <b>نزدیک‌شدن.</b>','dim');
+  say('هر کنش زمان می‌خرد. و نگاهِ تو — چشم‌هایی که «هیچ‌چیز پشتشان نیست» — بیش از حد بماند، لو می‌دهد.','dim');
+  hubActions();
+}
+
+function hubActions(){
+  const L=[];
+  L.push({group:'سریع و سرد'});
+  L.push({label:'اسکنِ بالینی', sub:`${min(CFG.scanCost)} دقیقه · بی‌سوءظن · بی‌پژواک`, disabled:S.scanned, on:doScan});
+  L.push({group:'گوش‌دادن (هر کانال یک‌بار) — هر کدام یک «واقعیت» می‌دهد'});
+  ORDER.forEach(k=>{
+    const c=CH[k]; const used=S.used.includes(k);
+    let dis=used, why='';
+    if(c.needsMet && !S.met){ dis=true; why='پس از آنکه او با تو حرف بزند'; }
+    if(c.beforeMetOnly && S.met){ dis=true; why='موسیقی تمام شد'; }
+    L.push({label:c.name, sub: used?'انجام شد': (why || `${c.hint} · ${min(c.cost)} دقیقه · سوءظن +${fa(c.susp)}`), disabled:dis, on:()=>doListen(k)});
+  });
+  L.push({group:' '});
+  L.push({label:'آماده‌ام؛ برنامه‌ریزیِ انتقال', primary:true, on:plan});
+  actions(L);
+}
+
+async function afterAction(){
+  S.actions++;
+  hud();
+  if(!S.shocked && S.actions>=CFG.shockAt){ await shock(); if(S.ended) return; }
+  if(S.susp>=CFG.suspLimit && !S.withdrawn){
+    S.withdrawn=true;
+    say('سارا یک قدم عقب می‌رود. «چشم‌هات… یه چیزیش درست نیست.» ساز را در آغوش می‌گیرد. دیگر به تو اعتماد نمی‌کند.','dim');
+  }
+  hubActions();
+}
+
+async function doScan(){
+  if(S.scanned || S.busy) return;
+  S.scanned=true;
+  say('<span class="sys">SCAN: female · 25y · cardio=regular · lungs=clear<br>host_viability ≈ 124h · rank = PRIME<br>access_point: nape, when head bows over instrument</span>');
+  say('تحلیلِ سرد. هیچ حسی همراهش نیست. یک عدد: <b>۱۲۴ ساعت.</b> بیش از تمامِ عمری که تا حالا داشته‌ای.','dim');
+  if(await spend(CFG.scanCost)) return;
+  await afterAction();
+}
+
+async function doListen(k){
+  if(S.used.includes(k) || S.busy) return;
+  const c=CH[k]; S.used.push(k); S.facts.push(k); S.susp+=c.susp;
+  say(c.text, k==='words'?'quote':'');
+  if(k==='words') S.name=true;
+  S.listenCount=(S.listenCount||0)+1;
+  say(`<span class="tag ${c.tag}">${c.tag==='E'?'اهرم':'لطیف'}</span> ${c.fact}`);
+  if(await spend(c.cost)) return;
+  if(!S.met && S.listenCount>=2){
+    S.met=true;
+    say('موسیقی تمام می‌شود. سکوتِ بعد از آن سنگین‌تر از قبل است. سارا سرش را می‌چرخاند و مستقیم به مخفیگاهت نگاه می‌کند.');
+    say('«میدونم اونجایی. سایه‌ت رو دیدم.»','quote');
+    say('از تاریکی بیرون می‌آیی، لنگ‌لنگان.','dim');
+  }
+  await afterAction();
+}
+
+/* ---------- برنامه ---------- */
+async function plan(){
+  if(!S.shocked){ await shock(); if(S.ended) return; }
+  S.phase='levers'; hud();
+  $('#log').appendChild(document.createElement('hr'));
+  head('برنامه');
+  const known=S.facts;
+  if(!known.length){ say('چیزی نمی‌دانی. فقط یک بدن می‌بینی.','dim'); return chooseApproach(); }
+  say('آنچه دربارهٔ او می‌دانی دست‌ات است. کدام را <b>به‌کار می‌بری</b> تا اعتمادش را بخری؟');
+  say('اهرم‌ها ارزان‌اند. لطیف‌ها اعتماد بیشتری می‌خرند — ولی هر چه بیشتر از آنها استفاده کنی، پژواکِ او در سرِ تو سنگین‌تر می‌شود. (و حتی دانستنشان هم اثر دارد.)','dim');
+  let html='';
+  known.forEach(k=>{
+    const c=CH[k];
+    html+=`<label class="lever"><input type="checkbox" data-k="${k}"><span><span class="tag ${c.tag}">${c.tag==='E'?'اهرم':'لطیف'}</span>${c.fact}<br><span style="color:var(--dim);font-size:14px">${c.lever.said}</span></span></label>`;
+  });
+  actions([{html}, {label:'ادامه', primary:true, on:()=>{
+    S.levers=[...document.querySelectorAll('#actions input:checked')].map(i=>i.dataset.k);
+    S.levers.forEach(k=>{ S.trust += CFG.leverGain[CH[k].tag]; });
+    S.levers.forEach(k=>{
+      say(CH[k].lever.said,'quote'); say(CH[k].lever.reply,'dim');
+    });
+    S.weight = S.facts.filter(k=>CH[k].tag==='T').length*CFG.weightKnownT
+             + S.levers.filter(k=>CH[k].tag==='T').length*CFG.weightUsedT;
+    hud();
+    chooseApproach();
+  }}]);
+}
+
+function qOf(a){
+  const A=CFG[a];
+  let q = A.base + A.trustK*S.trust - A.suspK*S.susp + (S.scanned?CFG.scanBonus:0);
+  if(S.withdrawn) q -= CFG.withdrawnPenalty;
+  return q;
+}
+function verdict(a){
+  const q=qOf(a), A=CFG[a];
+  if(q>=A.clean) return 'clean';
+  if(q>=A.messy) return 'messy';
+  return 'failed';
+}
+function hintOf(a){
+  const v=verdict(a);
+  return v==='clean'?'امیدوارکننده':v==='messy'?'نامطمئن':'بعید';
+}
+
+function chooseApproach(){
+  S.phase='approach';
+  say('چگونه؟','dim');
+  const canI = S.trust>=CFG.intimacy.needTrust && !S.withdrawn && S.clock>=CFG.intimacy.cost;
+  let whyI='';
+  if(S.clock<CFG.intimacy.cost) whyI='وقتِ کافی نیست';
+  else if(S.withdrawn) whyI='او عقب کشیده';
+  else if(S.trust<CFG.intimacy.needTrust) whyI='او هنوز به تو اعتماد ندارد';
+  const canA = S.clock>=CFG.ambush.cost;
+  actions([
+    {label:'همراهیِ او تا خانه‌اش', sub: canI ? `${min(CFG.intimacy.cost)} دقیقه · پیش‌بینی: ${hintOf('intimacy')}` : whyI, disabled:!canI, on:()=>execute('intimacy')},
+    {label:'غافلگیری در پارک', sub:`${min(CFG.ambush.cost)} دقیقه · باران پوشش می‌دهد · پیش‌بینی: ${hintOf('ambush')}`, disabled:!canA, on:()=>execute('ambush')},
+    {label:'نمی‌گیرمش', sub:'بگذار ساعت تمام شود', on:()=>refuse()}
+  ]);
+  if(!canI && !canA){ timeout(); }
+}
+
+async function refuse(){
+  S.approach='refuse'; S.ended='refuse';
+  say('ساز را می‌شنوی. دیگر به او نزدیک نمی‌شوی.');
+  say('ساعت می‌دود. اعداد قرمز…','dim');
+  S.clock=0; hud();
+  finale('refuse');
+}
+
+async function execute(a){
+  S.approach=a; S.phase='execute';
+  const v=verdict(a); S.quality=v;
+  $('#log').appendChild(document.createElement('hr'));
+  head('انتقال');
+  if(a==='intimacy'){
+    say('باران ناگهان شدت می‌گیرد. سارا فریاد می‌زند تا صدایش در رعدوبرق گم نشود: «بدو!» — او می‌دود و تو خودت را می‌کشانی.');
+    say('آپارتمان: سکوت، گرما، بوی دارچین و کتاب‌های قدیمی. ساعتی بعد، در تاریکیِ اتاق، عددِ روی مچت: <span class="sys" style="display:inline">00:15:00</span>','');
+    say('نمی‌خواهی بدانی در این ساعت چه حس کردی. فقط می‌دانی که زنده بودی.','dim');
+  } else {
+    say('از تاریکی بیرون می‌پری. باران صدا را می‌پوشاند — ولی نه همه‌اش را.');
+  }
+  if(await spend(CFG[a].cost)) return;
+  if(v==='failed'){ return failTransfer(a); }
+  S.clockAtTransfer = S.clock;
+  if(a==='intimacy'){ S.weight += CFG.weightIntimacy; hud(); }
+  if(v==='clean'){
+    say(a==='intimacy'
+      ? 'او زیرِ دستت می‌خشکد؛ وحشت او را فلج کرده. تقلای کوتاهی، و بعد سکوت. چیپ از گردنِ آدام بیرون می‌آید — و جایی تازه پیدا می‌کند.'
+      : 'تقلا کوتاه است. چیپ جای تازه‌اش را پیدا می‌کند.');
+  } else {
+    say(a==='intimacy'
+      ? 'او جیغ می‌کشد. مبل واژگون می‌شود؛ طبقهٔ بالا چراغی روشن می‌شود. دست‌ات زخم می‌خورد — ولی چیپ جایش را پیدا می‌کند.'
+      : 'او جیغ می‌کشد. صدا از باران بلندتر است. تقلا. دست‌ات زخمی می‌شود — ولی چیپ جایش را پیدا می‌کند.');
+  }
+  say('<span class="sys">…اتصال…</span>');
+  actions([{label:'چشم‌هایت را باز کن', primary:true, on:boot}]);
+}
+
+function failTransfer(a){
+  S.ended='failed';
+  say(a==='intimacy' ? 'او خیلی زود فهمید. جیغِ او تا خیابان می‌رود.' : 'او از دستت می‌لغزد و می‌گریزد. جیغش در پارک می‌پیچد.');
+  say('بدنِ آدام دیگر نمی‌کشد. زانوهایت خالی می‌شوند. اعدادِ قرمز…','dim');
+  S.clock=0; hud();
+  finale('failed');
+}
+function timeout(){
+  S.ended='timeout'; S.busy=false;
+  say('ساعت به صفر رسید. بدنِ آدام می‌ایستد. تو… خاموش می‌شوی.','dim');
+  finale('timeout');
+}
+
+/* ---------- بوت و پژواک ---------- */
+function tier(){
+  if(S.weight<=CFG.tiers.whisperMax) return 'whisper';
+  if(S.weight<=CFG.tiers.voiceMax) return 'voice';
+  return 'storm';
+}
+function echoLines(){
+  const L=[]; const used=k=>S.levers.includes(k), knew=k=>S.facts.includes(k);
+  if(S.approach==='intimacy') L.push('«به تو اعتماد کردم. اعتماد! و تو…»');
+  if(S.approach==='ambush') L.push('«حتی یک کلمه هم نگفتی. فقط پریدی.»');
+  if(used('words')) L.push('«مادرم… تو از مادرم استفاده کردی؟ از روزِ سالگردش؟»');
+  else if(knew('words')) L.push('«می‌دونستی امروز سالگردِ مادرمه. می‌دونستی… و باز هم.»');
+  if(used('eyes')) L.push('«دیدی دارم گریه می‌کنم… و ازش استفاده کردی.»');
+  else if(knew('eyes')) L.push('«دیدی گریه می‌کردم. و فقط نگاه کردی.»');
+  if(used('voice')) L.push('«شب‌ها تنها می‌زدم. و تو همین تنهایی را ازم گرفتی.»');
+  if(used('hands')) L.push('«نت سوم… من می‌دونستم اون روح بود.»');
+  if(!L.length) L.push('«کجام؟ چرا تاریکه؟ تو کی هستی؟»');
+  return L.slice(0,4);
+}
+function boot(){
+  S.phase='boot'; S.ended='transferred';
+  $('#log').appendChild(document.createElement('hr'));
+  head('بوت');
+  const clean = S.quality==='clean';
+  const t = tier();
+  const hostClock = clean?CFG.hostClockClean:CFG.hostClockMessy;
+  S.clock = hostClock; hud();
+  document.getElementById('target').textContent='—';
+  say(`<span class="sys">> BOOT: SARA.OS v25<br>> host_viability ......... ${fmt(hostClock)}${clean?'':'  (wound)'}<br>> limbic_interference .... ${t.toUpperCase()}  (echo detected)<br>> motor_precision ........ 0.97<br>> WARNING: hormonal cycle unknown — forecast unavailable</span>`);
+  say(`جسدِ آدام روی تو افتاده؛ سنگین و سرد. اما وحشتناک‌تر چیزی است که «درون» حس می‌کنی: سیلابی از خاطره — زنی مهربان که می‌خندد؛ بوی خاکِ بارانخورده؛ ملودیِ غمگینِ یک ویولن‌سل.`);
+  say('آینه: دختری با صورتی خونی و چشم‌های گشاد نگاهت می‌کند.','dim');
+  const cls = 'echo' + (t==='storm'?' storm':'');
+  echoLines().forEach(l=> say(l, cls));
+  if(t==='whisper') say('پژواک ضعیف است؛ مثل صدایی در اتاقِ دیگر. می‌شود نادیده‌اش گرفت.','dim');
+  if(t==='voice') say('پژواک واضح است. می‌شود با آن زندگی کرد — ولی نه ساکتش کرد.','dim');
+  if(t==='storm') say('پژواک ساکت نمی‌شود. هر چیزی که برای نزدیک‌شدن به‌کار بردی، حالا با صدای خودِ او به تو برمی‌گردد.','dim');
+  if(!clean){ say('<b>پیامدِ آشفتگی:</b> زخمِ دست، چراغِ روشنِ طبقهٔ بالا، شاهد. (Heat ↑)','dim'); }
+  actions([{label:'پایانِ صحنه', primary:true, on:()=>finale('transferred')}]);
+}
+
+/* ---------- پایان و گزارش ---------- */
+function summary(){
+  return {
+    v:'p1.0',
+    ending:S.ended,
+    scanned:S.scanned,
+    listened:S.used,
+    factsKnown:S.facts,
+    leversUsed:S.levers,
+    tenderKnown:knownT(),
+    tenderUsed:S.levers.filter(k=>CH[k].tag==='T').length,
+    approach:S.approach,
+    quality:S.quality,
+    suspicion:S.susp,
+    trust:S.trust,
+    weight:S.weight,
+    tier: S.approach && S.approach!=='refuse' && S.quality && S.quality!=='failed' ? tier() : null,
+    clockAtTransferSec: S.clockAtTransfer==null?null:Math.round(S.clockAtTransfer),
+    clockLeftSec:Math.round(S.clock)
+  };
+}
+function finale(kind){
+  S.phase='end'; S.busy=false;
+  $('#log').appendChild(document.createElement('hr'));
+  head('پایانِ آزمایش');
+  const s=summary();
+  const names={transferred:'انتقال انجام شد', failed:'انتقال شکست خورد', timeout:'ساعت تمام شد', refuse:'نگرفتیش'};
+  const sum = `<ul class="sum">
+    <li><b>نتیجه:</b> ${names[kind]||kind}</li>
+    <li><b>اسکن:</b> ${s.scanned?'بله':'خیر'} · <b>گوش‌دادن:</b> ${s.listened.length?s.listened.map(k=>CH[k].name).join('، '):'هیچ'}</li>
+    <li><b>واقعیت‌های لطیفِ دانسته‌شده:</b> ${fa(s.tenderKnown)} · <b>به‌کاررفته:</b> ${fa(s.tenderUsed)}</li>
+    <li><b>روش:</b> ${s.approach==='intimacy'?'همراهیِ تا خانه':s.approach==='ambush'?'غافلگیری':s.approach==='refuse'?'—':'—'} ${s.quality?('· کیفیت: '+(s.quality==='clean'?'پاک':s.quality==='messy'?'آشفته':'شکست')):''}</li>
+    <li><b>سنگینیِ پژواک:</b> ${fa(s.weight)}${s.tier?(' ('+({whisper:'نجوا',voice:'صدا',storm:'طوفان'})[s.tier]+')'):''}</li>
+  </ul>`;
+  say(sum);
+  say('<b>سه پرسش برای خودت:</b>','dim');
+  say('۱) آیا پیش از زدنِ «ادامه» دربارهٔ استفاده از یک واقعیتِ لطیف تردید کردی؟<br>۲) اگر فقط «اسکن» وجود داشت، همین انتخاب را می‌کردی؟<br>۳) چه لحظه‌ای را بیش از همه حس کردی؟ (ساعت؟ پژواک؟ هیچ‌کدام؟)','dim');
+  say('نتیجه (برای ارسال به من):','dim');
+  const ta=document.createElement('textarea'); ta.readOnly=true; ta.value=JSON.stringify(s,null,2); ta.id='report';
+  $('#log').appendChild(ta);
+  actions([
+    {label:'کپیِ نتیجه', on:async ()=>{ try{ await navigator.clipboard.writeText(ta.value); }catch(e){ ta.select(); document.execCommand&&document.execCommand('copy'); } }},
+    {label:'دوباره', primary:true, on:title}
+  ]);
+  const l=$('#log'); l.scrollTop=l.scrollHeight;
+}
+
+window.__P1 = { S:()=>S, CFG, summary }; // برای تست خودکار
+title();
+})();
+</script>
+</body>
+</html>
